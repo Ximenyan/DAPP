@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://apps.bdimg.com/libs/jquerymobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<script src="https://apps.bdimg.com/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://apps.bdimg.com/libs/jquerymobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<script src="http://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="./js/client-0.0.1.js"></script>
+</head>
+<body>
+<div data-role="page" id="pageone"  data-theme="b">
+  <div data-role="header" id="head">
+
+    <h1>Ugly交易所</h1>
+  </div>
+
+  <div data-role="content">
+<!--
+	<div id="myCarousel" class="carousel slide"   style="width:100%;hight:180px;">
+		<ol class="carousel-indicators">
+			<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+			<li data-target="#myCarousel" data-slide-to="1"></li>
+			<li data-target="#myCarousel" data-slide-to="2"></li>
+		</ol>   
+		<div class="carousel-inner">
+			<div class="item active">
+				<img src="./img/slide1.jpg"  style="width:100%;hight:180px;" alt="First slide">
+			</div>
+			<div class="item">
+				<img src="./img/slide2.jpg"  style="width:100%;hight:180px;" alt="Second slide">
+			</div>
+			<div class="item">
+				<img src="./img/slide3.jpg"  style="width:100%;hight:180px;" alt="Third slide">
+			</div>
+		</div>
+		<a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+			<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+			<span class="sr-only">Previous</span>
+		</a>
+		<a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+			<span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+			<span class="sr-only">Next</span>
+		</a>
+	</div> -->
+
+      <fieldset data-role="fieldcontain">
+        <label for="day">选择交易对</label>
+        <select name="day" id="day">
+         <option value="_BUY___List_Min_Order___ONG_ONT_">ONG/ONT</option>
+        </select>
+      </fieldset>
+    <div class="ui-grid-a">
+      <div class="ui-block-a">
+      <table border=1 cellpadding="10" width="100%" id="buy_table" style="margin:0px 10px 0px 0px;">
+	<tr><td colspan=5  style='color:#FFF0F5'>买单</td></tr>
+        <tr>
+		<td style='color:#FFF0F5'>挂单价</td>       
+		<td style='color:#FFF0F5'>金额</td>  
+		<td style='color:#FFF0F5'>总量</td>
+	</tr>
+      </table>
+
+      </div>
+
+      <div class="ui-block-b">
+      <table border=1 cellpadding="10" width="100%" id="sell_table" style="margin:0px 0px 0px 10px;">
+	<tr><td colspan=5 style='color:#F0FFF0'>卖单</td></tr>
+        <tr>
+		<td style='color:#F0FFF0'>挂单价</td>       
+		<td style='color:#F0FFF0'>金额</td>  
+		<td style='color:#F0FFF0'>总量</td>
+	</tr>
+      </table>
+      </div>
+    </div>
+<hr class="layui-bg-blue">
+    <div class="ui-grid-a">
+      <div class="ui-block-a">&emsp;
+    <form method="post" action="demo_form.php">
+      <div class="ui-field-contain">
+        <label for="fullname">数量：</label>
+        <input type="number" name="fullname" id="fullname">       
+        <label for="bday">挂单价：</label>
+        <input type="number" name="bday" id="bday">
+      </div>
+    <div id="buy_ont_btn">&emsp;</div>&emsp;
+    </form>
+      </div>
+      <div class="ui-block-b">&emsp;
+    <form method="post" action="demo_form.php">
+      <div class="ui-field-contain">
+        <label for="fullname">数量：</label>
+        <input type="number" name="fullname" id="fullname">       
+        <label for="bday">挂单价：</label>
+        <input type="number" name="bday" id="bday">
+      </div>
+    &emsp;<a href="#" class="ui-btn ui-btn-inline ui-corner-all" id="sell_ont_btn">&emsp;卖出&emsp;</a>
+    </form>
+      </div>
+    </div>
+	<div id="root"></div>
+  </div>
+
+  <div data-role="footer">
+
+    <div data-role="navbar">
+    	<ul>
+        	<li><a id="footer-btn-hot" href="#" data-transition="slidefade" data-icon="star">热门</a></li>
+        	<li><a id="footer-btn-more" href="#" data-transition="slidefade" data-icon="plus">更多</a></li>
+        	<li><a id="footer-btn-user" href="#" data-transition="slidefade" data-icon="user">我的</a></li>
+      	</ul>
+    </div>
+    <h1>2018/12/06 星期四</h1>
+  </div>
+</div>
+
+</body>
+</html>
