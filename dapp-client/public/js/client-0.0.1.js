@@ -81,14 +81,14 @@ function GetOrders(ID){
 $(document).ready(function(){
   $("#myCarousel").carousel();
 
-    $.get('/api?qurey_type=_BUY___List_Min_Order___ONG_ONT_', function(data) {
+    $.get('/api?req_type=query_order_rank&order_type=_BUY___List_Tail_Order___ONG_ONT_', function(data) {
       var arr = JSON.parse(data);
         console.log(arr);
       	for(var i in arr){
                 $("#buy_table").append("<tr><td style='color:#CC0033'>"+arr[i].Price/100000000+"</td><td style='color:#CC0033'>"+(arr[i].Price*arr[i].UnAmount)/100000000+"</td><td style='color:#CC0033'>"+arr[i].UnAmount+"</td></tr>");
 	}	
     });
-    $.get('/api?qurey_type=_BUY___List_Min_Order___ONG_ONT_', function(data) {
+    $.get('/api?req_type=query_order_rank&order_type=_BUY___List_Tail_Order___ONG_ONT_', function(data) {
       var arr = JSON.parse(data);
         console.log(arr);
       	for(var i in arr){

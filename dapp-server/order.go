@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"strings"
+
 	"github.com/ontio/ontology/common"
 )
+
 var tair_order_key = []string{
 	"_BUY___List_Min_Order___ONG_ONT_",
 	"_SELL___List_Min_Order___ONG_ONT_",
 }
+
 //代币小数精确到x分之1
 var DECIMALS_MAPS = map[string]int{
-	"_ONG_ONT_":100000000}
+	"_ONG_ONT_": 100000000}
 
 type Order struct {
 	Id       uint64
@@ -54,7 +58,9 @@ func bufUint64(buf []byte) []byte {
 	}
 	return res
 }
-func CreateOrder(buf []byte) (order *Order, err error) {
+
+//根据BYTES 还原一个Order
+func OrderDeseriallization(buf []byte) (order *Order, err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			order = nil
@@ -84,43 +90,41 @@ func CreateOrder(buf []byte) (order *Order, err error) {
 	order.UnAmount = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
 	return order, nil
 }
+
 var orders_type_map = make(map[string][]*Order)
 
 //通过RPC 和 订单ID 查询所有订单
-func GetOrdersByIntId(id int64) *Order{
-		key := append([]byte("__ORDER___"), reverseBytes(IntToByte(int64(id)))...)
-		//key = []byte("_BUY___List_Min_Order___ONG_ONT_")
-		//fmt.Println(key)
-		res, _ := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), key)
-		//fmt.Println(res)
-		order, err := CreateOrder(res)
-		//fmt.Println(order)
-		if err != nil {
-			return nil
-		}
-		return order
-}
-
-//通过RPC 和 订单ID 查询所有订单
-func GetOrdersByBytesId(id []byte) *Order{
-	key := append([]byte("__ORDER___"), id...)
+func GetOrdersByIntId(id int64) *Order {
+	key := append([]byte("__ORDER___"), reverseBytes(IntToByte(int64(id)))...)
 	res, _ := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), key)
-	order, err := CreateOrder(res)
+	order, err := OrderDeseriallization(res)
 	if err != nil {
 		return nil
 	}
 	return order
 }
+
+//通过RPC 和 订单ID 查询所有订单
+func GetOrdersByBytesId(id []byte) *Order {
+	key := append([]byte("__ORDER___"), id...)
+	res, _ := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), key)
+	order, err := OrderDeseriallization(res)
+	if err != nil {
+		return nil
+	}
+	return order
+}
+
 //根据订单类型抓取所有订单
 func GetAllOrdersByType(strType string) []*Order {
 	res, _ := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte(strType))
 	orders := []*Order{}
-	for len(res)>=1 {
+	for len(res) >= 1 {
 		order := GetOrdersByBytesId(res)
-		orders = append(orders,order)
-		if order != nil{
+		orders = append(orders, order)
+		if order != nil {
 			res = reverseBytes(IntToByte(int64(order.PreId)))
-		}else{
+		} else {
 			res = []byte{}
 		}
 	}
@@ -128,35 +132,59 @@ func GetAllOrdersByType(strType string) []*Order {
 	return orders
 }
 
+//获取应该插入的位置，可能会有错
+func GetIndexOrder(order_type string, price uint64) (pre, next uint64) {
+	res, err := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte(order_type))
+	if err != nil || len(res) == 0 {
+		return 0, 0
+	}
+	for {
+		order := GetOrdersByBytesId(res)
+		if strings.Index(order_type, "_BUY_") >= 0 {
+			if order.Price <= price {
+				return order.Id, order.NextId
+			}
+		} else if strings.Index(order_type, "_SELL_") >= 0 {
+			if order.Price >= price {
+				return order.Id, order.NextId
+			}
+		}
+		if order.PreId == 0 {
+			return 0, order.Id
+		}
+		res = reverseBytes(IntToByte(int64(order.PreId)))
+	}
+}
+
 //获取排行数据
-func GetOrdersRankByType(strType string,top_num int) []Ranking {
+func GetOrdersRankByType(strType string, top_num int) []Ranking {
 	var orders []*Order
-	if _,ok := orders_type_map[strType]; !ok{
+	if _, ok := orders_type_map[strType]; !ok {
 		orders = GetAllOrdersByType(strType)
-	}else{
+	} else {
 		orders = orders_type_map[strType]
 	}
 
 	ranks := []Ranking{}
-	if len(orders) < 1{
+	if len(orders) < 1 {
 		return ranks
 	}
 	var price uint64 = orders[0].Price
-	var  unamount uint64= 0
-	for i:=0;i<len(orders);i++{
+	var unamount uint64 = 0
+	for i := 0; i < len(orders); i++ {
 		o := orders[i]
-		if o == nil{
-			ranks = append(ranks,Ranking{price,unamount})
+		if o == nil {
+			ranks = append(ranks, Ranking{price, unamount})
 			continue
 		}
-		if price != o.Price{
-			ranks = append(ranks,Ranking{price,unamount})
+		if price != o.Price {
+			ranks = append(ranks, Ranking{price, unamount})
 			unamount = o.UnAmount
 			price = o.Price
-		}else{
+		} else {
 			unamount += o.UnAmount
 		}
-		if len(ranks) >= top_num{
+		if len(ranks) >= top_num {
 			return ranks
 		}
 	}

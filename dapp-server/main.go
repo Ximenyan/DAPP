@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/ontio/ontology-go-sdk"
 	sdk "github.com/ontio/ontology-go-sdk/common"
 	"github.com/ontio/ontology/common"
 )
 
-var CONTRACT_ADDR, _ = common.AddressFromHexString("cf5e452798963fbb9f40652ffda7ddfcfd6db594")
+var CONTRACT_ADDR, _ = common.AddressFromHexString("4598ebf7cc487cd2858f1bc2a9361cfcf2157e58")
 var ONT *ontology_go_sdk.OntologySdk
 
 func CreateONT() {
@@ -42,23 +43,37 @@ func OntConnect() {
 
 }
 
-type timeHandler struct {
+type ServerHandler struct {
 }
 
-func (th *timeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (th *ServerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	orders := GetOrdersRankByType(r.Form.Get("qurey_type"),10)
-	bytes, _ := json.Marshal(orders)
-	w.Write([]byte(bytes))
+	switch r.Form.Get("req_type") {
+	case "query_order_rank":
+		orders := GetOrdersRankByType(r.Form.Get("order_type"), 10)
+		bytes, _ := json.Marshal(orders)
+		w.Write([]byte(bytes))
+		break
+	case "create_order":
+		order_type := r.Form.Get("order_type")
+		price, err := strconv.ParseUint(r.Form.Get("price"), 10, 64)
+		if err != nil {
+			return
+		}
+		pre, next := GetIndexOrder(order_type, price)
+		bytes, _ := json.Marshal([]uint64{pre, next})
+		w.Write(bytes)
+		break
+	default:
+		break
+	}
 }
 
 func main() {
-	//&{d37b6553c7fdc61ebb10bb02ee968f845b66bd7902e70c9bff4bc4b0fcd43d89 1 11929500 [0xc4201387c0 0xc420138880 0xc420138940]}
 	CreateONT()
 	OntConnect()
-	fmt.Println(ONT.GetTransaction("d37b6553c7fdc61ebb10bb02ee968f845b66bd7902e70c9bff4bc4b0fcd43d89"))
 	mux := http.NewServeMux()
-	th := &timeHandler{}
+	th := &ServerHandler{}
 	mux.Handle("/", th)
 	http.ListenAndServe(":3030", mux)
 }

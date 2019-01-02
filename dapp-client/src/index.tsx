@@ -81,19 +81,32 @@ function ActionLink() {
   }
   async function handleClick() {
     const account = await Ontology.client.api.asset.getAccount();
-    const scriptHash: string = 'faf0bb2cb8b525477e8bbfdb4d81dd373b47c390';
+    const scriptHash: string = '4598ebf7cc487cd2858f1bc2a9361cfcf2157e58';
     const operation: string = 'CreateBuyOrder';
     const gasPrice: number = 500;
     const gasLimit: number = 20000000;
     const requireIdentity: boolean = true;
     const hexstr: string = base58ToHex(account);
+    $.ajaxSettings.async = false;
+    let preId: number = Number(0);
+    let nextId: number = Number(0);
+    const price: number = Number($('#buy_price_input').val());
+    const amount: number = Number($('#buy_amount_input').val());
+    $.get('/api?req_type=create_order&order_type=_BUY___List_Tail_Order___ONG_ONT_&price=' + price + '',
+    function(data, status) {
+      // alert('数据: ' + data + '\n状态: ' + status);
+      const numArr = JSON.parse(data);
+      preId = numArr[0];
+      nextId = numArr[1];
+    });
+    alert('pre: ' + preId + '\nnext: ' + nextId);
     const parametersRaw: any[] = [
     {type: 'ByteArray', value: hexstr },
     { type: 'String', value: '_ONG_ONT_' },
-    { type: 'Integer', value: Number(1) },
-    { type: 'Integer', value: Number(1000000) },
-    { type: 'Integer', value: Number(0) },
-    { type: 'Integer', value: Number(2) }];
+    { type: 'Integer', value: amount },
+    { type: 'Integer', value: price },
+    { type: 'Integer', value: Number(preId) },
+    { type: 'Integer', value: Number(nextId) }];
     const args = parametersRaw.map((raw) => ({ type: raw.type, value: convertValue(raw.value, raw.type) }));
     try {
       const result = await Ontology.client.api.smartContract.invoke({
