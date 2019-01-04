@@ -11,13 +11,14 @@ import (
 	"github.com/ontio/ontology/common"
 )
 
-var CONTRACT_ADDR, _ = common.AddressFromHexString("4598ebf7cc487cd2858f1bc2a9361cfcf2157e58")
+var CONTRACT_ADDR, _ = common.AddressFromHexString("34595975de8567962974dd9a2ba8f70b5a9e0965")
 var ONT *ontology_go_sdk.OntologySdk
 
 func CreateONT() {
 	ONT = ontology_go_sdk.NewOntologySdk()
 	ONT.NewRpcClient().SetAddress("http://13.78.112.191:20336")
 }
+
 func OntConnect() {
 	CL := ONT.NewWebSocketClient()
 	CL.Connect("ws://13.78.112.191:20335")
@@ -25,7 +26,6 @@ func OntConnect() {
 	go func() {
 		CL.AddContractFilter(CONTRACT_ADDR.ToHexString())
 		CL.SubscribeEvent()
-
 		for {
 			select {
 			case q := <-CL.GetActionCh():
@@ -40,7 +40,6 @@ func OntConnect() {
 			}
 		}
 	}()
-
 }
 
 type ServerHandler struct {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/hex"
-	"strconv"
+	//"fmt"
 
 	"github.com/ontio/ontology/common"
 )
@@ -20,13 +20,17 @@ func reverseString2(s string) string {
 	}
 	return string(runes)
 }
+
 // 反转Bytearray
 func reverseBytes(res []byte) []byte {
+	//fmt.Println(res)
 	for from, to := 0, len(res)-1; from < to; from, to = from+1, to-1 {
 		res[from], res[to] = res[to], res[from]
 	}
+	//fmt.Println(res)
 	return res
 }
+
 type CreateOrderEvent []interface{}
 
 func (this CreateOrderEvent) GetEventName() string {
@@ -36,34 +40,18 @@ func (this CreateOrderEvent) GetEventName() string {
 func (this CreateOrderEvent) GetOrder() Order {
 	o := Order{}
 	items := this[1].([]interface{})
-	if s, err := strconv.ParseUint(reverseString2(items[0].(string)), 16, 64); err == nil {
-		o.Id = s
-	}
+	o.Id.SetString(reverseString2(items[0].(string)), 16)
 	if bytes, err := hex.DecodeString(items[1].(string)); err == nil {
 		o.Type = string(bytes)
 	}
 	if addr, err := common.AddressFromHexString(items[2].(string)); err == nil {
 		o.Owner = addr.ToBase58()
 	}
-	//fmt.Println(items[3].(string))
-	//fmt.Println(reverseString2(items[3].(string)))
-	if s, err := strconv.ParseUint(reverseString2(items[3].(string)), 16, 64); err == nil {
-		o.Price = s
-	}
-	if s, err := strconv.ParseUint(reverseString2(items[4].(string)), 16, 64); err == nil {
-		o.Amount = s
-	}
-	if s, err := strconv.ParseUint(reverseString2(items[5].(string)), 16, 64); err == nil {
-		o.State = s
-	}
-	if s, err := strconv.ParseUint(reverseString2(items[6].(string)), 16, 64); err == nil {
-		o.PreId = s
-	}
-	if s, err := strconv.ParseUint(reverseString2(items[7].(string)), 16, 64); err == nil {
-		o.NextId = s
-	}
-	if s, err := strconv.ParseUint(reverseString2(items[8].(string)), 16, 64); err == nil {
-		o.UnAmount = s
-	}
+	o.Price.SetString(reverseString2(items[3].(string)), 16)
+	o.Amount.SetString(reverseString2(items[4].(string)), 16)
+	o.State.SetString(reverseString2(items[5].(string)), 16)
+	o.PreId.SetString(reverseString2(items[6].(string)), 16)
+	o.NextId.SetString(reverseString2(items[7].(string)), 16)
+	o.UnAmount.SetString(reverseString2(items[8].(string)), 16)
 	return o
 }

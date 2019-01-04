@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/ontio/ontology/common"
@@ -19,20 +21,20 @@ var DECIMALS_MAPS = map[string]int{
 	"_ONG_ONT_": 100000000}
 
 type Order struct {
-	Id       uint64
+	Id       big.Int
 	Type     string
 	Owner    string
-	Price    uint64
-	Amount   uint64
-	State    uint64
-	PreId    uint64
-	NextId   uint64
-	UnAmount uint64
+	Price    big.Int
+	Amount   big.Int
+	State    big.Int
+	PreId    big.Int
+	NextId   big.Int
+	UnAmount big.Int
 }
 
 type Ranking struct {
-	Price    uint64
-	UnAmount uint64
+	Price    big.Int
+	UnAmount *big.Int
 }
 
 func IntToByte(num int64) []byte {
@@ -68,26 +70,30 @@ func OrderDeseriallization(buf []byte) (order *Order, err error) {
 		}
 	}()
 	order = new(Order)
-	if buf[3] == 1 {
-		order.Id = binary.BigEndian.Uint64(bufUint64(buf[4 : 4+buf[3]]))
-	}
+	order.Id.SetBytes(reverseBytes(buf[4 : 4+buf[3]]))
 	tmp := 4 + buf[3]
 	order.Type = string(buf[tmp+2 : tmp+2+buf[tmp+1]])
 	tmp = tmp + 2 + buf[tmp+1]
 	addr, _ := common.AddressParseFromBytes(buf[tmp+2 : tmp+22])
 	order.Owner = addr.ToBase58()
 	tmp = tmp + 22
-	order.Price = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+	order.Price.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
 	tmp = tmp + 2 + buf[tmp+1]
-	order.Amount = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+	order.Amount.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+
 	tmp = tmp + 2 + buf[tmp+1]
-	order.State = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+	order.State.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+
 	tmp = tmp + 2 + buf[tmp+1]
-	order.PreId = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+	order.PreId.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+
 	tmp = tmp + 2 + buf[tmp+1]
-	order.NextId = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+	order.NextId.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+
 	tmp = tmp + 2 + buf[tmp+1]
-	order.UnAmount = binary.BigEndian.Uint64(bufUint64(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+	order.UnAmount.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
+
+	fmt.Println(order)
 	return order, nil
 }
 
@@ -121,9 +127,11 @@ func GetAllOrdersByType(strType string) []*Order {
 	orders := []*Order{}
 	for len(res) >= 1 {
 		order := GetOrdersByBytesId(res)
+		//PushOrder(order)
 		orders = append(orders, order)
 		if order != nil {
-			res = reverseBytes(IntToByte(int64(order.PreId)))
+			res = reverseBytes(order.PreId.Bytes())
+			//fmt.Println(res)
 		} else {
 			res = []byte{}
 		}
@@ -133,7 +141,8 @@ func GetAllOrdersByType(strType string) []*Order {
 }
 
 //获取应该插入的位置，可能会有错
-func GetIndexOrder(order_type string, price uint64) (pre, next uint64) {
+func GetIndexOrder(order_type string, iPrice uint64) (pre, next uint64) {
+	price := big.NewInt(int64(iPrice))
 	res, err := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte(order_type))
 	if err != nil || len(res) == 0 {
 		return 0, 0
@@ -141,52 +150,51 @@ func GetIndexOrder(order_type string, price uint64) (pre, next uint64) {
 	for {
 		order := GetOrdersByBytesId(res)
 		if strings.Index(order_type, "_BUY_") >= 0 {
-			if order.Price <= price {
-				return order.Id, order.NextId
+			if order.Price.Cmp(price) <= 0 {
+				return order.Id.Uint64(), order.NextId.Uint64()
 			}
 		} else if strings.Index(order_type, "_SELL_") >= 0 {
-			if order.Price >= price {
-				return order.Id, order.NextId
+			if order.Price.Cmp(price) >= 0 {
+				return order.Id.Uint64(), order.NextId.Uint64()
 			}
 		}
-		if order.PreId == 0 {
-			return 0, order.Id
+		if order.PreId.Int64() == 0 {
+			return 0, order.Id.Uint64()
 		}
-		res = reverseBytes(IntToByte(int64(order.PreId)))
+		res = reverseBytes(order.PreId.Bytes())
 	}
 }
 
 //获取排行数据
 func GetOrdersRankByType(strType string, top_num int) []Ranking {
 	var orders []*Order
-	if _, ok := orders_type_map[strType]; !ok {
-		orders = GetAllOrdersByType(strType)
-	} else {
-		orders = orders_type_map[strType]
-	}
-
+	orders = GetAllOrdersByType(strType)
 	ranks := []Ranking{}
 	if len(orders) < 1 {
 		return ranks
 	}
-	var price uint64 = orders[0].Price
-	var unamount uint64 = 0
+	var price big.Int = orders[0].Price
+	var unamount *big.Int = big.NewInt(0)
 	for i := 0; i < len(orders); i++ {
 		o := orders[i]
 		if o == nil {
 			ranks = append(ranks, Ranking{price, unamount})
 			continue
 		}
-		if price != o.Price {
+		if price.Cmp(&o.Price) != 0 {
 			ranks = append(ranks, Ranking{price, unamount})
-			unamount = o.UnAmount
+			unamount = &o.UnAmount
 			price = o.Price
 		} else {
-			unamount += o.UnAmount
+			unamount = unamount.Add(unamount, &o.UnAmount)
 		}
 		if len(ranks) >= top_num {
 			return ranks
 		}
+		if i == len(orders)-1 {
+			ranks = append(ranks, Ranking{price, unamount})
+		}
 	}
+	//fmt.Println(ranks)
 	return ranks
 }
