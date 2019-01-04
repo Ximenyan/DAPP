@@ -3,27 +3,8 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 import * as base58 from 'bs58';
-// import { BrowserRouter, Route } from 'react-router-dom';
-// import { Home } from './home';
-// import { Message } from './message';
-// import { Network } from './network';
-// import { Oep4 } from './oep4';
-// import { Provider } from './provider';
-// import { SmartContract } from './smartContract';
 
 Ontology.client.registerClient({});
-/*const App: React.SFC<{}> = () => (
-  <BrowserRouter>
-    <>
-      <Route path="/" exact={true} component={Home} />
-      <Route path="/network" exact={true} component={Network} />
-      <Route path="/oep4" exact={true} component={Oep4} />
-      <Route path="/smart-contract" exact={true} component={SmartContract} />
-      <Route path="/message" exact={true} component={Message} />
-      <Route path="/provider" exact={true} component={Provider} />
-    </>
-  </BrowserRouter>
-);*/
 
 function ab2hexstring(arr: any): string {
   let result: string = '';
@@ -31,42 +12,43 @@ function ab2hexstring(arr: any): string {
   for (let i = 0; i < uint8Arr.byteLength; i++) {
     let str = uint8Arr[i].toString(16);
     str = str.length === 0
-        ? '00'
-        : str.length === 1
-            ? '0' + str
-            : str;
+      ? '00'
+      : str.length === 1
+        ? '0' + str
+        : str;
     result += str;
   }
   return result;
 }
+
 function base58ToHex(base58Encoded: string) {
   const decoded = base58.decode(base58Encoded);
   const hexEncoded = ab2hexstring(decoded).substr(2, 40);
-  alert(decoded);
-  // if (base58Encoded !== hexToBase58(hexEncoded)) {
-  //   throw new Error('[addressToU160] decode encoded verify failed');
-  // }
   return hexEncoded;
 }
+
 const Login: React.SFC<{}> = () => {
   async function onGetAccount() {
     const account = await Ontology.client.api.asset.getAccount();
-    // alert('onGetPublicKey: ' + base58ToHex(account));
     ReactDOM.render(<>{account}</>, document.getElementById('address') as HTMLElement);
     alert('onGetAccount: ' + JSON.stringify(account));
   }
-  return(
-<>
-    <a href="#" className={'ui-btn ui-corner-all ui-shadow ui-icon-home ui-btn-icon-left'}>注销</a>
-    <h1 id="address">Ugly交易所</h1>
-    <a href="#" className={'ui-btn ui-corner-all ui-shadow ui-icon-search ui-btn-icon-left'} onClick={onGetAccount}>
-      登录
-    </a>
-</>
+
+  return (
+    <>
+      <a href="#" className={'ui-btn ui-corner-all ui-shadow ui-icon-home ui-btn-icon-left'}>注销</a>
+      <h1 id="address">Ugly交易所</h1>
+      <a href="#" className={'ui-btn ui-corner-all ui-shadow ui-icon-search ui-btn-icon-left'}
+         onClick={onGetAccount}>
+        登录
+      </a>
+    </>
   );
 };
 
-function ActionLink() {
+function CreateOrder(props: any) {
+  const isSell: boolean = props.isSell;
+
   function convertValue(value: string, type: Ontology.ParameterType) {
     switch (type) {
       case 'Boolean':
@@ -79,10 +61,12 @@ function ActionLink() {
         return value;
     }
   }
+
   async function handleClick() {
     const account = await Ontology.client.api.asset.getAccount();
-    const scriptHash: string = '4598ebf7cc487cd2858f1bc2a9361cfcf2157e58';
-    const operation: string = 'CreateBuyOrder';
+    const scriptHash: string = '34595975de8567962974dd9a2ba8f70b5a9e0965';
+    let operation: string = 'CreateBuyOrder';
+    // alert(isSell);
     const gasPrice: number = 500;
     const gasLimit: number = 20000000;
     const requireIdentity: boolean = true;
@@ -90,24 +74,36 @@ function ActionLink() {
     $.ajaxSettings.async = false;
     let preId: number = Number(0);
     let nextId: number = Number(0);
-    const price: number = Number($('#buy_price_input').val());
-    const amount: number = Number($('#buy_amount_input').val());
-    $.get('/api?req_type=create_order&order_type=_BUY___List_Tail_Order___ONG_ONT_&price=' + price + '',
-    function(data, status) {
-      // alert('数据: ' + data + '\n状态: ' + status);
-      const numArr = JSON.parse(data);
-      preId = numArr[0];
-      nextId = numArr[1];
-    });
-    alert('pre: ' + preId + '\nnext: ' + nextId);
+    let price: number = Number(0); // $('#buy_price_input').val()
+    let amount: number = Number(0); // $('#buy_amount_input').val()
+    let orderType: string = '_BUY___List_Tail_Order___ONG_ONT_';
+    if (isSell) {
+      orderType = '_SELL___List_Tail_Order___ONG_ONT_';
+      operation = 'CreateSellOrder';
+      price = Number($('#sell_price_input').val()) * 1000000000;
+      amount = Number($('#sell_amount_input').val());
+      // alert(price);
+    } else {
+      price = Number($('#buy_price_input').val()) * 1000000000;
+      amount = Number($('#buy_amount_input').val());
+      // alert(price);
+    }
+    $.get('/api?req_type=create_order&order_type=' + orderType + '&price=' + price + '',
+      function(data, status) {
+        const numArr = JSON.parse(data);
+        preId = numArr[0];
+        nextId = numArr[1];
+        alert(preId);
+        alert(nextId);
+      });
     const parametersRaw: any[] = [
-    {type: 'ByteArray', value: hexstr },
-    { type: 'String', value: '_ONG_ONT_' },
-    { type: 'Integer', value: amount },
-    { type: 'Integer', value: price },
-    { type: 'Integer', value: Number(preId) },
-    { type: 'Integer', value: Number(nextId) }];
-    const args = parametersRaw.map((raw) => ({ type: raw.type, value: convertValue(raw.value, raw.type) }));
+      {type: 'ByteArray', value: hexstr},
+      {type: 'String', value: '_ONG_ONT_'},
+      {type: 'Integer', value: amount},
+      {type: 'Integer', value: price},
+      {type: 'Integer', value: Number(preId)},
+      {type: 'Integer', value: Number(nextId)}];
+    const args = parametersRaw.map((raw) => ({type: raw.type, value: convertValue(raw.value, raw.type)}));
     try {
       const result = await Ontology.client.api.smartContract.invoke({
         scriptHash,
@@ -125,11 +121,19 @@ function ActionLink() {
       console.log('onScCall error:', e);
     }
   }
+
+  if (isSell) {
+    return (
+      <a href="#" onClick={handleClick} className={'ui-btn ui-btn-inline ui-corner-all'} id="sell_ont_btn">
+        &emsp;卖出&emsp;
+      </a>);
+  }
   return (
-  <a href="#" onClick={handleClick} className={'ui-btn ui-btn-inline ui-corner-all'} id="sell_ont_btn">
-    &emsp;挂单&emsp;
-  </a>);
+    <a href="#" onClick={handleClick} className={'ui-btn ui-btn-inline ui-corner-all'} id="buy_ont_btn">
+      &emsp;挂单&emsp;
+    </a>);
 }
-ReactDOM.render(<ActionLink />, document.getElementById('buy_ont_btn'));
-ReactDOM.render(<Login />, document.getElementById('head') as HTMLElement);
-// ReactDOM.render(<App />, document.getElementById('root') as HTMLElement);
+
+ReactDOM.render(<CreateOrder isSell={false}/>, document.getElementById('buy_btn'));
+ReactDOM.render(<CreateOrder isSell={true}/>, document.getElementById('sell_btn'));
+ReactDOM.render(<Login/>, document.getElementById('head') as HTMLElement);
