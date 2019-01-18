@@ -12,7 +12,7 @@ var (
 		"f60c9cd10b04fa2a5fd6f914c64c6528"}
 )
 
-func PushOrder(order *Order) error {
+func BmobPushOrder(order *Order) error {
 	bytes, _ := json.Marshal(order)
 	header, err := bmob.DoRestReq(appConfig,
 		bmob.RestRequest{

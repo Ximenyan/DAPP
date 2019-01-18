@@ -11,7 +11,8 @@ import (
 	"github.com/ontio/ontology/common"
 )
 
-var CONTRACT_ADDR, _ = common.AddressFromHexString("34595975de8567962974dd9a2ba8f70b5a9e0965")
+//722da66717247fa6dd8dda4b5cef4535509855bb
+var CONTRACT_ADDR, _ = common.AddressFromHexString("ac1bef614a9cbd2ed44d86fd2a8341c2a3c7300d")
 var ONT *ontology_go_sdk.OntologySdk
 
 func CreateONT() {
@@ -71,6 +72,10 @@ func (th *ServerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	CreateONT()
 	OntConnect()
+	//DBTest()
+	//fmt.Println(ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte("_CONTRACT_ADDR__ONG_ONT_")))
+	//fmt.Println(ONT.Native.Ong.TotalSupply())
+	//fmt.Println(ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte("_BUY___List_Head_Order___ONG_ONT_")))
 	mux := http.NewServeMux()
 	th := &ServerHandler{}
 	mux.Handle("/", th)
