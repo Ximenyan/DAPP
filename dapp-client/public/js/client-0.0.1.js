@@ -1,6 +1,6 @@
 var socket;
 var startHight
-var contract_hash = "6b5042927197210604d90935af76c1bb67807fff"
+var contract_hash = "9663ed8e3fd56c25251a2817f2e2b80f5e08cbd1"
 var reverse = function (str) {
     var stack = [];//生成一个栈
     for (var len = str.length, i = len; i >= 0; i--) {
@@ -92,7 +92,7 @@ $(document).ready(function () {
             $("#buy_table").append("<tr><td style='color:#CC0033'>" + arr[i].Price / 1000000000 + "</td><td style='color:#CC0033'>" + (arr[i].Price * arr[i].UnAmount) / 1000000000 + "</td><td style='color:#CC0033'>" + arr[i].UnAmount + "</td></tr>");
         }
     });
-    $.get('/api?req_type=query_order_rank&order_type=_BUY___List_Tail_Order___ONG_ONT_', function (data) {
+    $.get('/api?req_type=query_order_rank&order_type=_SELL___List_Tail_Order___ONG_ONT_', function (data) {
         var arr = JSON.parse(data);
         console.log(arr);
         for (var i in arr) {

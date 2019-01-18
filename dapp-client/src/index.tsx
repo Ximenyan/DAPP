@@ -64,9 +64,8 @@ function CreateOrder(props: any) {
 
   async function handleClick() {
     const account = await Ontology.client.api.asset.getAccount();
-    const scriptHash: string = '34595975de8567962974dd9a2ba8f70b5a9e0965';
+    const scriptHash: string = 'ac1bef614a9cbd2ed44d86fd2a8341c2a3c7300d';
     let operation: string = 'CreateBuyOrder';
-    // alert(isSell);
     const gasPrice: number = 500;
     const gasLimit: number = 20000000;
     const requireIdentity: boolean = true;
@@ -88,13 +87,14 @@ function CreateOrder(props: any) {
       amount = Number($('#buy_amount_input').val());
       // alert(price);
     }
+    // alert(operation);
     $.get('/api?req_type=create_order&order_type=' + orderType + '&price=' + price + '',
       function(data, status) {
         const numArr = JSON.parse(data);
         preId = numArr[0];
         nextId = numArr[1];
-        alert(preId);
-        alert(nextId);
+        // alert(preId);
+        // alert(nextId);
       });
     const parametersRaw: any[] = [
       {type: 'ByteArray', value: hexstr},
