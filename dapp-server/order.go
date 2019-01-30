@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
-	"time"
 
 	"github.com/ontio/ontology/common"
 )
@@ -24,6 +23,7 @@ var DECIMALS_MAPS = map[string]int{
 type Order struct {
 	Id       big.Int
 	Type     string
+	Business string
 	Owner    string
 	Price    big.Int
 	Amount   big.Int
@@ -74,6 +74,8 @@ func OrderDeseriallization(buf []byte) (order *Order, err error) {
 	order.Id.SetBytes(reverseBytes(buf[4 : 4+buf[3]]))
 	tmp := 4 + buf[3]
 	order.Type = string(buf[tmp+2 : tmp+2+buf[tmp+1]])
+	tmp = tmp + 2 + buf[tmp+1]
+	order.Business = string(buf[tmp+2 : tmp+2+buf[tmp+1]])
 	tmp = tmp + 2 + buf[tmp+1]
 	addr, _ := common.AddressParseFromBytes(buf[tmp+2 : tmp+22])
 	order.Owner = addr.ToBase58()

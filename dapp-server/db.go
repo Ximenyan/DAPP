@@ -67,16 +67,43 @@ func DBTest() {
 	iter.Release()
 }
 
+//Push
 func PushOrder(o *Order) {
 	db, err := leveldb.OpenFile("./database/all", nil)
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close() //关闭数据库
 	source, _ := json.Marshal(o)
 	db.Put(o.Id.Bytes(), source, nil)
-	iter := db.NewIterator(nil, nil)
-	for ok := iter.Seek(o.Id.Bytes()); ok; ok = iter.Next() {
-		fmt.Printf("查找数据:%s, value:%s\n", iter.Key(), iter.Value())
+}
+
+//Deleteb by ID
+func DeleteOrder(id *big.Int) error {
+	db, err := leveldb.OpenFile("./database/all", nil)
+	if err != nil {
+		return err
 	}
 	defer db.Close() //关闭数据库
+	key := id.Bytes()
+
+	ok := db.Delete(key, nil)
+	return ok
+}
+
+//排序
+func RankOrder(id *big.Int) {
+
+}
+
+//查询
+func GetOrder(id *big.Int) error {
+	db, err := leveldb.OpenFile("./database/all", nil)
+	if err != nil {
+		return err
+	}
+	defer db.Close() //关闭数据库
+	key := id.Bytes()
+	data, ok := db.Get(key, nil)
+	return ok
 }

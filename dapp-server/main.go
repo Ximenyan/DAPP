@@ -12,7 +12,7 @@ import (
 )
 
 //722da66717247fa6dd8dda4b5cef4535509855bb
-var CONTRACT_ADDR, _ = common.AddressFromHexString("ac1bef614a9cbd2ed44d86fd2a8341c2a3c7300d")
+var CONTRACT_ADDR, _ = common.AddressFromHexString("f7835aa13c338142fd81382ddadecc4fc1b18b82")
 var ONT *ontology_go_sdk.OntologySdk
 
 func CreateONT() {
