@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
@@ -31,6 +32,25 @@ type Order struct {
 	PreId    big.Int
 	NextId   big.Int
 	UnAmount big.Int
+}
+
+func (o *Order) ToString() string {
+
+	res, err := json.Marshal(o)
+	if err != nil {
+		log.Println(err, o)
+		return ""
+	}
+	return string(res)
+}
+func (o *Order) ToBytes() []byte {
+
+	res, err := json.Marshal(o)
+	if err != nil {
+		log.Println(err, o)
+		return nil
+	}
+	return res
 }
 
 type Ranking struct {
@@ -96,7 +116,7 @@ func OrderDeseriallization(buf []byte) (order *Order, err error) {
 	tmp = tmp + 2 + buf[tmp+1]
 	order.UnAmount.SetBytes(reverseBytes(buf[tmp+2 : tmp+2+buf[tmp+1]]))
 
-	fmt.Println(order)
+	//fmt.Println(order)
 	return order, nil
 }
 
@@ -121,20 +141,22 @@ func GetOrdersByBytesId(id []byte) *Order {
 	if err != nil {
 		return nil
 	}
+	BoltPushOrder(order)
 	return order
 }
 
 //根据订单类型抓取所有订单
 func GetAllOrdersByType(strType string) []*Order {
 	res, _ := ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte(strType))
+
 	orders := []*Order{}
 	for len(res) >= 1 {
 		order := GetOrdersByBytesId(res)
-		//PushOrder(order)
+		BoltPushOrder(order)
+		log.Println(order)
 		orders = append(orders, order)
 		if order != nil {
 			res = reverseBytes(order.PreId.Bytes())
-			//fmt.Println(res)
 		} else {
 			res = []byte{}
 		}
@@ -198,6 +220,5 @@ func GetOrdersRankByType(strType string, top_num int) []Ranking {
 			ranks = append(ranks, Ranking{price, unamount})
 		}
 	}
-	//fmt.Println(ranks)
 	return ranks
 }

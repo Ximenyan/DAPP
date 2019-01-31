@@ -12,7 +12,7 @@ import (
 )
 
 //722da66717247fa6dd8dda4b5cef4535509855bb
-var CONTRACT_ADDR, _ = common.AddressFromHexString("f7835aa13c338142fd81382ddadecc4fc1b18b82")
+var CONTRACT_ADDR, _ = common.AddressFromHexString("e2480be800fa3a1ad859d6518a115de02f7dceea")
 var ONT *ontology_go_sdk.OntologySdk
 
 func CreateONT() {
@@ -34,8 +34,10 @@ func OntConnect() {
 				for _, event := range events.Notify {
 					if event.ContractAddress == CONTRACT_ADDR.ToHexString() {
 						create := CreateOrderEvent(event.States.([]interface{}))
+						o := create.GetOrder()
+						BoltPushOrder(o)
+						fmt.Println(o)
 						fmt.Println(create.GetEventName())
-						fmt.Println(create.GetOrder())
 					}
 				}
 			}
@@ -70,12 +72,11 @@ func (th *ServerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	CreateONT()
-	OntConnect()
 	//DBTest()
-	//fmt.Println(ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte("_CONTRACT_ADDR__ONG_ONT_")))
+	//fmt.Println(ONT.GetStorage(CONTRACT_ADDR.ToHexString(), append([]byte("__ORDER___"), 2)))
 	//fmt.Println(ONT.Native.Ong.TotalSupply())
 	//fmt.Println(ONT.GetStorage(CONTRACT_ADDR.ToHexString(), []byte("_BUY___List_Head_Order___ONG_ONT_")))
+	//GetOrdersRankByType("_SELL___List_Tail_Order___ONG_ONT_", 10)
 	mux := http.NewServeMux()
 	th := &ServerHandler{}
 	mux.Handle("/", th)
